@@ -54,42 +54,47 @@ transition() {
 }
 
 evalCode() {
-    code=`sed 's/.*`\(.*\)`.*/\1/' <<< "$1"`
+    front=`cut -d "\`" -f1 <<< "$1"`
+    back=`cut -d "\`" -f3 <<< $1`
+    code=`cut -d "\`" -f2 <<< "$1"`
+    
     result="`eval $code`"
 
 }
 
 # shows images as single slides
 showimg() {
-    imgfile=`sed 's/!{\(.*\)}/\1/' <<< "$1"`
-    image="`jp2a './$imgfile'`"
+    imgfile=`sed 's/\;\[\(.*\)\]/\1/' <<< "$1"`
+    image=`jp2a ./"$imgfile"`
     transition "$image" "$currentTransition"
-}
-
-
-
-parseline () {
-
-    # this executes embedded code
-    [[ "$1" =~ \`.*\`  ]] && 1=`evalCode`
-
-    # this matches indicators for slide changes
-    
-
-    # this matches setters for various fonts
-    
-
-    [[ "$1" =~ ^\#.*$ ]] && showimg   
-
-
-    # this matches images 
-    [[ "$1" =~ ^\;\[.*\]$ ]] && showimg $1
-
 }
 
 
 cat "$1" |
 while read -r line
 do
-    parseline $line
+
+    # this executes embedded code
+    [[ "$1" =~ \`.*\`  ]] && 1=`evalCode`
+
+    # this matches indicators for slide changes
+    if [[ "$1" =~ \;SLIDE\s* ]]
+    then
+        read test
+        echo skipped
+        # clear 
+    fi
+
+    # this matches setters for various fonts
+    
+
+    # this matches headers and titles
+    [[ "$1" =~ ^#\s.*$ ]] && printTitle
+    [[ "$1" =~ ^###\s.*$ ]] && printSubtitle
+
+
+
+    # this matches images 
+    [[ "$1" =~ ^\;\[.*\]$ ]] && showimg $1
+
 done
