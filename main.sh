@@ -54,14 +54,14 @@ transition() {
 }
 
 evalCode() {
-    code="`echo $1 | sed -e 's/!{\(.*\)}/\1/'`"
+    code=`sed 's/.*`\(.*\)`.*/\1/' <<< "$1"`
     result="`eval $code`"
 
 }
 
 # shows images as single slides
 showimg() {
-    imgfile=`echo $1 | sed -e 's/!{\(.*\)}/\1/'`
+    imgfile=`sed 's/!{\(.*\)}/\1/' <<< "$1"`
     image="`jp2a './$imgfile'`"
     transition "$image" "$currentTransition"
 }
