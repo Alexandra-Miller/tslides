@@ -1,0 +1,27 @@
+
+
+;;titlefont:    
+;;subtitlefont: 
+;;headerfont:   
+;;transition:   tty
+
+;SLIDE
+
+# This is a title
+## This is a subtitle
+### this is a even smaller title
+This is text (rendered as text in the terminal)
+
+;SLIDE
+
+
+`this is an embedded command that will display as normal text`
+
+# `this is an embedded command that will display as title text`
+
+;SLIDE
+
+;[exampleImage]
+
+
+;SLIDE
