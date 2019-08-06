@@ -1,7 +1,7 @@
 ;;transition: cut
 ;;titleFont: big
 
-;SLIDE
+;slide
 
 # This is a title
 ## TAarvbabd 
@@ -9,7 +9,7 @@
 This is text (rendered as text in the terminal)
 moredefaultext
 
-;SLIDE
+;slide
 
 ### Below is the output of a dynamically executed command:
 
@@ -17,10 +17,10 @@ moredefaultext
 
 # Another title
 
-;SLIDE
+;slide
 
 ;[Comparison-City-MAIN-ART.jpg]
 
 |>curl wttr.in<|
 
-;SLIDE
+;slide

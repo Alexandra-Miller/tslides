@@ -103,7 +103,7 @@ parseLine() {
     fi
 
     # this matches indicators for slide changes
-    if [[ "$val" =~ ^\;SLIDE\ *$ ]]
+    if [[ "$val" =~ ^\;slide\ *$ ]]
     then
         read -rsn 1 -u 1 test
         clear 
