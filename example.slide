@@ -1,25 +1,26 @@
-
-
-;;titlefont:    
-;;subtitlefont: 
-;;headerfont:   
-;;transition:   tty
+;;transition: cut
+;;titleFont: big
 
 ;SLIDE
 
 # This is a title
-## This is a subtitle
+## TAarvbabd 
 ### this is a even smaller title
 This is text (rendered as text in the terminal)
+moredefaultext
 
 ;SLIDE
 
 ### Below is the output of a dynamically executed command:
-### Out: `ls`
+
+### |>ls<|
+
+# Another title
 
 ;SLIDE
 
 ;[Comparison-City-MAIN-ART.jpg]
 
+|>curl wttr.in<|
 
 ;SLIDE

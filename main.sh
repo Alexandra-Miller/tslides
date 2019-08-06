@@ -12,35 +12,41 @@
 
 # ====================  GLOBAL VARS  ===========================================
 
-# CONSTANTS
 
+# CONSTANTS
 HELPMSG="USAGE: tslides FILE || OPTIONS
 OPTIONS:
 -v  --version   prints version and then exits
 -h  --help      prints this message and then exits
 "
+TERMSIZE=`tput cols`
+FONT_DIR="$HOME/.resources/tslides/resources/fonts"
 
 # MUTABLE VARS
+current_transition="cut"
 
-current_transition="instant"
+title_font="3-d"
+subtitle_font="standard"
+header_font="mini"
 
 
 # ====================  FUNCTIONS  ============================================
 
 
 cutTransition() {
-    echo $1
+    echo "$1"
 }
 
 ttyTransition () {
-    echo $1 |
+    echo "$1"
+    echo "$1" |
     while read -r line
     do
         echo $line |
         while  read -r -n1 char
         do
             echo -n "$char"
-            sleep 0.00006944444
+            sleep 0.0000694444
         done
         echo ""
     done
@@ -48,53 +54,98 @@ ttyTransition () {
 
 # args: transition text, transition type
 transition() {
-    [ "$2" = "cut" ] && cutTransition $1;
-    [ "$2" = "tty" ] && ttyTransition $1;
-    [ "$2" = "fade" ] && fadeTransition $1;
+    [ "$2" = "cut" ] && cutTransition "$1"
+    [ "$2" = "tty" ] && ttyTransition "$1"
+    [ "$2" = "fade" ] && fadeTransition "$1"
 }
 
 evalCode() {
-    front=`cut -d "\`" -f1 <<< "$1"`
-    back=`cut -d "\`" -f3 <<< $1`
-    code=`cut -d "\`" -f2 <<< "$1"`
-    
-    result="`eval $code`"
-
+    code=`sed 's/.*|>\(.*\)<|.*/\1/' <<< "$1"`
+    front=`sed 's/|>.*//' <<< "$1"`
+    back=`sed 's/.*<|//' <<< "$1"`
+    evalResult=`eval "$code"`
+    echo -e "$front $evalResult $back"
 }
 
 # shows images as single slides
-showimg() {
+printImg() {
     imgfile=`sed 's/\;\[\(.*\)\]/\1/' <<< "$1"`
-    image=`jp2a ./"$imgfile"`
+    image=`jp2a "$imgfile"`
     transition "$image" "$currentTransition"
 }
 
+printTitle() {
+    text=`sed 's/#\(.*\)/\1/' <<< "$1"`
+    figText=`figlet -w "$TERMSIZE" -f "$FONT_DIR/$title_font.flf" "$text"`
+    transition "$figText" "$current_transition"
+}
+
+printSubtitle() {
+    text=`sed 's/##\(.*\)/\1/' <<< "$1"`
+    figText=`figlet -w "$TERMSIZE" -f "$FONT_DIR/$subtitle_font.flf" "$text"`
+    echo "$figText"
+    transition "$figText=" "$current_transition"
+}
+
+printHeader() {
+    text=`sed 's/###\(.*\)/\1/' <<< "$1"`
+    figText=`figlet -w "$TERMSIZE" -f "$FONT_DIR/$header_font.flf"  "$text"`
+    transition "$figText" "$current_transition"
+}
+
+parseLine() {
+
+    val="$1"
+    # this executes embedded code
+    if [[ "$1" =~ ^.*\|\>.*\<\|.*$ ]]
+    then
+        val=`evalCode "$1"`
+    fi
+
+    # this matches indicators for slide changes
+    if [[ "$val" =~ ^\;SLIDE\ *$ ]]
+    then
+        read -rsn 1 -u 1 test
+        clear 
+
+    # this matches setters for various fonts
+    elif [[ "$val" =~ ^\;\;transition:\ \ *.*$  ]]
+    then
+        current_transition=`sed 's/\;\;transition:\ *\(.*\)\ */\1/' <<< "$val"`
+    elif [[ "$val" =~ ^\;\;titleFont:\ \ *.*$  ]] 
+    then
+        title_font=`sed 's/\;\;titleFont:\ *\(.*\)\ */\1/' <<< "$val"`
+    elif [[ "$val" =~ ^\;\;subtitleFont:\ \ *.*$  ]]  
+    then
+        subtitle_font=`sed 's/\;\;subtitleFont:\ *\(.*\)\ */\1/' <<< "$val"`
+    elif [[ "$val" =~ ^\;\;headerFont:\ \ *.*$  ]] 
+    then
+        header_font=`sed 's/\;\;headerFont:\ *\(.*\)\ */\1/' <<< "$val"`
+
+    # this matches headers and titles
+    elif [[ "$val" =~ ^#\ \ *.*$  ]]
+    then
+        printTitle "$val" 
+    elif [[ "$val" =~ ^##\ \ *.*$  ]]
+    then
+        printSubtitle "$val"
+    elif [[ "$val" =~ ^###\ \ *.*$  ]]
+    then
+        printHeader "$val"
+
+    # this matches images 
+    elif [[ "$val" =~ ^\;\[.*\]$\ * ]]
+    then
+        printImg "$val"
+
+    # this prints any text that was not matched by previous patterns
+    else
+        transition "$val" "$current_transition"
+    fi
+}
 
 cat "$1" |
 while read -r line
 do
-
-    # this executes embedded code
-    [[ "$1" =~ \`.*\`  ]] && 1=`evalCode`
-
-    # this matches indicators for slide changes
-    if [[ "$1" =~ \;SLIDE\s* ]]
-    then
-        read test
-        echo skipped
-        # clear 
-    fi
-
-    # this matches setters for various fonts
-    
-
-    # this matches headers and titles
-    [[ "$1" =~ ^#\s.*$ ]] && printTitle
-    [[ "$1" =~ ^###\s.*$ ]] && printSubtitle
-
-
-
-    # this matches images 
-    [[ "$1" =~ ^\;\[.*\]$ ]] && showimg $1
-
+    parseLine "$line"
 done
