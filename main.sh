@@ -7,7 +7,7 @@
 @description
 
 @description
-@dependencies: bash 
+@dependencies: bash, jp2a, figlet 
 '
 
 # ====================  GLOBAL VARS  ===========================================
@@ -83,7 +83,7 @@ printTitle() {
 printSubtitle() {
     text=`sed 's/##\(.*\)/\1/' <<< "$1"`
     figText=`figlet -w "$TERMSIZE" -f "$FONT_DIR/$subtitle_font.flf" "$text"`
-    transition "$figText=" "$current_transition"
+    transition "$figText" "$current_transition"
 }
 
 printHeader() {
