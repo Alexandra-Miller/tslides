@@ -71,7 +71,7 @@ evalCode() {
 printImg() {
     imgfile=`sed 's/\;\[\(.*\)\]/\1/' <<< "$1"`
     image=`jp2a "$imgfile"`
-    transition "$image" "$currentTransition"
+    transition "$image" "$current_transition"
 }
 
 printTitle() {
