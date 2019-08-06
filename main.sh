@@ -83,7 +83,6 @@ printTitle() {
 printSubtitle() {
     text=`sed 's/##\(.*\)/\1/' <<< "$1"`
     figText=`figlet -w "$TERMSIZE" -f "$FONT_DIR/$subtitle_font.flf" "$text"`
-    echo "$figText"
     transition "$figText=" "$current_transition"
 }
 
