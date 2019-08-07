@@ -29,6 +29,7 @@ title_font="3-d"
 subtitle_font="standard"
 header_font="mini"
 
+pause_on="slides"
 
 # ====================  FUNCTIONS  ============================================
 
@@ -114,7 +115,7 @@ parseLine() {
     # this matches indicators for slide changes
     if [[ "$val" =~ ^\;slide\ *$ ]]
     then
-        read -rsn 1 -u 1 test
+        read -rsn 1 -u 1
         clear 
 
     # this matches setters for various fonts
@@ -150,6 +151,12 @@ parseLine() {
     # this prints any text that was not matched by previous patterns
     else
         transition "$val" "$current_transition"
+    fi
+
+    if [ "$pause_on" = "line" ]
+    then
+        read -rsn 1 -u 1
+        clear
     fi
 }
 
