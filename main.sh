@@ -38,11 +38,11 @@ cutTransition() {
 }
 
 ttyTransition () {
-    echo "$1"
+    IFS=$'\n'
     echo "$1" |
     while read -r line
     do
-        echo $line |
+        echo "$line" |
         while  read -r -n1 char
         do
             echo -n "$char"
@@ -52,11 +52,21 @@ ttyTransition () {
     done
 }
 
+lineTransition () {
+    IFS=$'\n'
+    echo "$1" |
+    while read -r line
+    do
+        echo "$line"
+        sleep 0.1
+    done
+}
+
 # args: transition text, transition type
 transition() {
     [ "$2" = "cut" ] && cutTransition "$1"
     [ "$2" = "tty" ] && ttyTransition "$1"
-    [ "$2" = "fade" ] && fadeTransition "$1"
+    [ "$2" = "line" ] && lineTransition "$1"
 }
 
 evalCode() {
