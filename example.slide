@@ -16,8 +16,13 @@ moredefaultext
 
 ;slide
 
-;[Comparison-City-MAIN-ART.jpg]
+;i[Comparison-City-MAIN-ART.jpg]
+;v[test] 
 
 |>curl wttr.in<|
+
+;slide
+
+## |>ls <|
 
 ;slide

@@ -74,15 +74,22 @@ evalCode() {
     code=`sed 's/.*|>\(.*\)<|.*/\1/' <<< "$1"`
     front=`sed 's/|>.*//' <<< "$1"`
     back=`sed 's/.*<|//' <<< "$1"`
-    evalResult=`eval "$code"`
+    evalResult=`( eval "$code" )`
     echo -e "$front $evalResult $back"
 }
 
 # shows images as single slides
 printImg() {
-    imgfile=`sed 's/\;\[\(.*\)\]/\1/' <<< "$1"`
+    clear
+    imgfile=`sed 's/\;i\[\(.*\)\]/\1/' <<< "$1"`
     image=`jp2a "$imgfile"`
     transition "$image" "$current_transition"
+}
+
+showVideo() {
+    clear
+    videoFile=`sed 's/\;i\[\(.*\)\]/\1/' <<< "$1"`
+    
 }
 
 printTitle() {
@@ -132,6 +139,11 @@ parseLine() {
     then
         header_font=`sed 's/\;\;headerFont:\ *\(.*\)\ */\1/' <<< "$val"`
 
+    # this matches pause on inidcators
+    elif [[ "$val" =~ ^\;\;pauseOn:\ \ *.*$  ]] 
+    then
+        pause_on=`sed 's/\;\;pauseOn:\ *\(.*\)\ */\1/' <<< "$val"`
+
     # this matches headers and titles
     elif [[ "$val" =~ ^#\ \ *.*$  ]]
     then
@@ -144,9 +156,14 @@ parseLine() {
         printHeader "$val"
 
     # this matches images 
-    elif [[ "$val" =~ ^\;\[.*\]$\ * ]]
+    elif [[ "$val" =~ ^\;i\[.*\]$\ * ]]
     then
         printImg "$val"
+
+    # this matches videos 
+    elif [[ "$val" =~ ^\;v\[.*\]$\ * ]]
+    then
+        showVideo "$val"
 
     # this prints any text that was not matched by previous patterns
     else
@@ -156,7 +173,6 @@ parseLine() {
     if [ "$pause_on" = "line" ]
     then
         read -rsn 1 -u 1
-        clear
     fi
 }
 
