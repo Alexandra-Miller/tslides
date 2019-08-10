@@ -19,7 +19,8 @@ OPTIONS:
 -v  --version   prints version and then exits
 -h  --help      prints this message and then exits
 "
-TERMSIZE=`tput cols`
+TERM_WIDTH=`tput cols`
+TERM_HEIGHT=`tput lines`
 FONT_DIR="$HOME/.resources/tslides/resources/fonts"
 
 # MUTABLE VARS
@@ -87,31 +88,33 @@ printImg() {
 }
 
 showVideo() {
-    clear
-    videoFile=`sed 's/\;i\[\(.*\)\]/\1/' <<< "$1"`
-    
+    caca_width=`(( $TERM_HEIGHT * 16 / 9 ))`
+    CACA_GEOMETRY="$TERM_HEIGHT x $TERM_WIDTH"
+    echo $CACA_GEOMETRY
+    sleep 3
+    videoFile=`sed 's/\;v\[\(.*\)\]/\1/' <<< "$1"`
+    mplayer -vo caca -quiet "$videoFile"
 }
 
 printTitle() {
     text=`sed 's/#\(.*\)/\1/' <<< "$1"`
-    figText=`figlet -w "$TERMSIZE" -f "$FONT_DIR/$title_font.flf" "$text"`
+    figText=`figlet -w "$TERM_WIDTH" -f "$FONT_DIR/$title_font.flf" "$text"`
     transition "$figText" "$current_transition"
 }
 
 printSubtitle() {
     text=`sed 's/##\(.*\)/\1/' <<< "$1"`
-    figText=`figlet -w "$TERMSIZE" -f "$FONT_DIR/$subtitle_font.flf" "$text"`
+    figText=`figlet -w "$TERM_WIDTH" -f "$FONT_DIR/$subtitle_font.flf" "$text"`
     transition "$figText" "$current_transition"
 }
 
 printHeader() {
     text=`sed 's/###\(.*\)/\1/' <<< "$1"`
-    figText=`figlet -w "$TERMSIZE" -f "$FONT_DIR/$header_font.flf"  "$text"`
+    figText=`figlet -w "$TERM_WIDTH" -f "$FONT_DIR/$header_font.flf"  "$text"`
     transition "$figText" "$current_transition"
 }
 
 parseLine() {
-
     val="$1"
     # this executes embedded code
     if [[ "$1" =~ ^.*\|\>.*\<\|.*$ ]]
@@ -119,60 +122,66 @@ parseLine() {
         val=`evalCode "$1"`
     fi
 
-    # this matches indicators for slide changes
-    if [[ "$val" =~ ^\;slide\ *$ ]]
+    #this catches setters
+    if [[ "$val" =~ ^\;\;.*$ ]]
     then
-        read -rsn 1 -u 1
-        clear 
-
-    # this matches setters for various fonts
-    elif [[ "$val" =~ ^\;\;transition:\ \ *.*$  ]]
-    then
-        current_transition=`sed 's/\;\;transition:\ *\(.*\)\ */\1/' <<< "$val"`
-    elif [[ "$val" =~ ^\;\;titleFont:\ \ *.*$  ]] 
-    then
-        title_font=`sed 's/\;\;titleFont:\ *\(.*\)\ */\1/' <<< "$val"`
-    elif [[ "$val" =~ ^\;\;subtitleFont:\ \ *.*$  ]]  
-    then
-        subtitle_font=`sed 's/\;\;subtitleFont:\ *\(.*\)\ */\1/' <<< "$val"`
-    elif [[ "$val" =~ ^\;\;headerFont:\ \ *.*$  ]] 
-    then
-        header_font=`sed 's/\;\;headerFont:\ *\(.*\)\ */\1/' <<< "$val"`
-
-    # this matches pause on inidcators
-    elif [[ "$val" =~ ^\;\;pauseOn:\ \ *.*$  ]] 
-    then
-        pause_on=`sed 's/\;\;pauseOn:\ *\(.*\)\ */\1/' <<< "$val"`
-
-    # this matches headers and titles
-    elif [[ "$val" =~ ^#\ \ *.*$  ]]
-    then
-        printTitle "$val" 
-    elif [[ "$val" =~ ^##\ \ *.*$  ]]
-    then
-        printSubtitle "$val"
-    elif [[ "$val" =~ ^###\ \ *.*$  ]]
-    then
-        printHeader "$val"
-
-    # this matches images 
-    elif [[ "$val" =~ ^\;i\[.*\]$\ * ]]
-    then
-        printImg "$val"
-
-    # this matches videos 
-    elif [[ "$val" =~ ^\;v\[.*\]$\ * ]]
-    then
-        showVideo "$val"
-
-    # this prints any text that was not matched by previous patterns
-    else
-        transition "$val" "$current_transition"
-    fi
-
-    if [ "$pause_on" = "line" ]
-    then
-        read -rsn 1 -u 1
+        # this matches setters for various fonts
+        if [[ "$val" =~ ^\;\;transition:\ \ *.*$  ]]
+        then
+                current_transition=`sed 's/\;\;transition:\ *\(.*\)\ */\1/' <<< "$val"`
+        elif [[ "$val" =~ ^\;\;titleFont:\ \ *.*$  ]] 
+        then
+            title_font=`sed 's/\;\;titleFont:\ *\(.*\)\ */\1/' <<< "$val"`
+        elif [[ "$val" =~ ^\;\;subtitleFont:\ \ *.*$  ]]  
+        then
+            subtitle_font=`sed 's/\;\;subtitleFont:\ *\(.*\)\ */\1/' <<< "$val"`
+        elif [[ "$val" =~ ^\;\;headerFont:\ \ *.*$  ]] 
+        then
+            header_font=`sed 's/\;\;headerFont:\ *\(.*\)\ */\1/' <<< "$val"`
+ 
+        # this matches pause on inidcators
+        elif [[ "$val" =~ ^\;\;pauseOn:\ \ *.*$  ]] 
+        then
+            pause_on=`sed 's/\;\;pauseOn:\ *\(.*\)\ */\1/' <<< "$val"`
+        fi
+    else 
+        # this matches indicators for slide changes
+        if [[ "$val" =~ ^\;slide\ *$ ]]
+        then
+            read -rsn 1 -u 1
+            clear
+            return 0 
+        
+        # this matches headers and titles
+        elif [[ "$val" =~ ^#\ \ *.*$  ]]
+        then
+            printTitle "$val" 
+        elif [[ "$val" =~ ^##\ \ *.*$  ]]
+        then
+            printSubtitle "$val"
+        elif [[ "$val" =~ ^###\ \ *.*$  ]]
+        then
+            printHeader "$val"
+ 
+        # this matches images 
+        elif [[ "$val" =~ ^\;i\[.*\]$\ * ]]
+        then
+            printImg "$val"
+ 
+        # this matches videos 
+        elif [[ "$val" =~ ^\;v\[.*\]$\ * ]]
+        then
+            showVideo "$val"
+ 
+        # this prints any text that was not matched by previous patterns
+        else
+            transition "$val" "$current_transition"
+        fi
+ 
+        if [ "$pause_on" = "line" ]
+        then
+            read -rsn 1 -u 1
+        fi
     fi
 }
 
