@@ -26,7 +26,7 @@ FONT_DIR="$HOME/.resources/tslides/resources/fonts"
 # MUTABLE VARS
 current_transition="cut"
 
-title_font="3-d"
+title_font="epic"
 subtitle_font="standard"
 header_font="mini"
 
@@ -98,19 +98,19 @@ showVideo() {
 
 printTitle() {
     text=`sed 's/#\(.*\)/\1/' <<< "$1"`
-    figText=`figlet -w "$TERM_WIDTH" -f "$FONT_DIR/$title_font.flf" "$text"`
+    figText=`figlet -t -f "$FONT_DIR/$title_font.flf" "$text"`
     transition "$figText" "$current_transition"
 }
 
 printSubtitle() {
     text=`sed 's/##\(.*\)/\1/' <<< "$1"`
-    figText=`figlet -w "$TERM_WIDTH" -f "$FONT_DIR/$subtitle_font.flf" "$text"`
+    figText=`figlet -t -f "$FONT_DIR/$subtitle_font.flf" "$text"`
     transition "$figText" "$current_transition"
 }
 
 printHeader() {
     text=`sed 's/###\(.*\)/\1/' <<< "$1"`
-    figText=`figlet -w "$TERM_WIDTH" -f "$FONT_DIR/$header_font.flf"  "$text"`
+    figText=`figlet -t -f "$FONT_DIR/$header_font.flf"  "$text"`
     transition "$figText" "$current_transition"
 }
 
