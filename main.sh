@@ -21,7 +21,7 @@ OPTIONS:
 "
 TERM_WIDTH=`tput cols`
 TERM_HEIGHT=`tput lines`
-FONT_DIR="$HOME/.resources/tslides/resources/fonts"
+FONT_DIR="$HOME/.resources/tslides/fonts"
 
 # MUTABLE VARS
 current_transition="cut"
@@ -88,8 +88,8 @@ printImg() {
 }
 
 showVideo() {
-    caca_width=`(( $TERM_HEIGHT * 16 / 9 ))`
-    CACA_GEOMETRY="$TERM_HEIGHT x $TERM_WIDTH"
+    termwide_width=`(( $TERM_HEIGHT * 16 / 9 ))`
+    
     echo $CACA_GEOMETRY
     sleep 3
     videoFile=`sed 's/\;v\[\(.*\)\]/\1/' <<< "$1"`
