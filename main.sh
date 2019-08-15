@@ -33,12 +33,34 @@ header_font="mini"
 pause_on="slides"
 
 # ====================  FUNCTIONS  ============================================
-
-
+: '
+@function
+  @name: cutTransition
+  @description
+Transitions in text instantly.
+  @description
+  @ependencies: none
+  @args: $1 transition text
+  @sideEffects: sends text to STDOUT
+  @returns: none
+@function
+'
 cutTransition() {
     echo "$1"
 }
 
+: '
+@function
+  @name: ttyTransition
+  @description
+Transitions in text like a TTY terminal running on a high baud modem.
+  @description
+  @ependencies: none
+  @args: $1 transition text
+  @sideEffects: sends text to STDOUT
+  @returns: none
+@function
+'
 ttyTransition () {
     IFS=$'\n'
     echo "$1" |
@@ -54,6 +76,18 @@ ttyTransition () {
     done
 }
 
+: '
+@function
+  @name: lineTransition
+  @description
+Fades in text line by line.
+  @description
+  @ependencies: none
+  @args: $1 transition text
+  @sideEffects: sends text to STDOUT
+  @returns: none
+@function
+'
 lineTransition () {
     IFS=$'\n'
     echo "$1" |
@@ -64,13 +98,36 @@ lineTransition () {
     done
 }
 
-# args: transition text, transition type
+: '
+@function
+  @name: transition
+  @description
+Transitions text in terminal.
+  @description
+  @ependencies: cutTransition, ttyTransition, lineTransition
+  @args: $1 transition text, $2  transition type
+  @sideEffects: sends text to STDOUT
+  @returns: nothing
+@function
+'
 transition() {
     [ "$2" = "cut" ] && cutTransition "$1"
     [ "$2" = "tty" ] && ttyTransition "$1"
     [ "$2" = "line" ] && lineTransition "$1"
 }
 
+: '
+@function
+  @name: evalCode
+  @description
+Evaluates a line of code and returns the text sent to STDOUT from program to terminal.
+  @description
+  @ependencies: nothing
+  @args: $1 line of code to be evaluated
+  @sideEffects: Executes line of code and substitutes it into string.
+  @returns: text sent to STDOUT by program
+@function
+'
 evalCode() {
     code=`sed 's/.*|>\(.*\)<|.*/\1/' <<< "$1"`
     front=`sed 's/|>.*//' <<< "$1"`
@@ -79,7 +136,18 @@ evalCode() {
     echo -e "$front $evalResult $back"
 }
 
-# shows images as single slides
+: '
+@function
+  @name:
+  @description
+Displays image in terminal.
+  @description
+  @ependencies: jp2a, transition
+  @args: $1  line of code containing image text
+  @sideEffects: prints image in terminal
+  @returns: nothing
+@function
+'
 printImg() {
     clear
     imgfile=`sed 's/\;i\[\(.*\)\]/\1/' <<< "$1"`
@@ -87,33 +155,56 @@ printImg() {
     transition "$image" "$current_transition"
 }
 
-showVideo() {
+# TODO: make video play in same terminal
+: '
+@function
+  @name: playVideo
+  @description
+Plays video in the terminal 
+  @description
+  @ependencies: caca, mplayer
+  @args: $1  line of code containing video text
+  @sideEffects: plays video in new window
+  @returns: nothing
+@function
+'
+playVideo() {
     termwide_width=`(( $TERM_HEIGHT * 16 / 9 ))`
     
-    echo $CACA_GEOMETRY
-    sleep 3
     videoFile=`sed 's/\;v\[\(.*\)\]/\1/' <<< "$1"`
     mplayer -vo caca -quiet "$videoFile"
 }
 
-printTitle() {
-    text=`sed 's/#\(.*\)/\1/' <<< "$1"`
-    figText=`figlet -t -f "$FONT_DIR/$title_font.flf" "$text"`
+: '
+@function
+  @name: printHeader
+  @description
+Prints a line of special text as defined by a delimiter.
+  @description 
+  @ependencies: figlet
+  @args: $1  line of code containing text, $2  text designatot, $3 font
+  @sideEffects: prints to terminal
+  @returns: nothing
+@function
+'
+printText() {
+    text=`sed "s/$2\(.*\)/\1/" <<< "$1"`
+    figText=`figlet -t -f "$FONT_DIR/$3.flf" "$text"`
     transition "$figText" "$current_transition"
 }
 
-printSubtitle() {
-    text=`sed 's/##\(.*\)/\1/' <<< "$1"`
-    figText=`figlet -t -f "$FONT_DIR/$subtitle_font.flf" "$text"`
-    transition "$figText" "$current_transition"
-}
-
-printHeader() {
-    text=`sed 's/###\(.*\)/\1/' <<< "$1"`
-    figText=`figlet -t -f "$FONT_DIR/$header_font.flf"  "$text"`
-    transition "$figText" "$current_transition"
-}
-
+: '
+@function
+  @name: parseLine
+  @description
+Parses a line of code from the input file.
+  @description
+  @ependencies: printHeader, printSubtitle, printTitle, printImg, showVideo, transition, evalCode
+  @args: $1  line of code to be evaluated
+  @sideEffects: subprocesses print to terminal and may execute system commands
+  @returns: nothing
+@function
+'
 parseLine() {
     val="$1"
     # this executes embedded code
@@ -155,13 +246,13 @@ parseLine() {
         # this matches headers and titles
         elif [[ "$val" =~ ^#\ \ *.*$  ]]
         then
-            printTitle "$val" 
+            printText "$val" "#" "$title_font"  
         elif [[ "$val" =~ ^##\ \ *.*$  ]]
         then
-            printSubtitle "$val"
+            printText "$val" "##" "$subtitle_font"  
         elif [[ "$val" =~ ^###\ \ *.*$  ]]
         then
-            printHeader "$val"
+            printText "$val" "###" "$header_font"  
  
         # this matches images 
         elif [[ "$val" =~ ^\;i\[.*\]$\ * ]]
@@ -171,7 +262,7 @@ parseLine() {
         # this matches videos 
         elif [[ "$val" =~ ^\;v\[.*\]$\ * ]]
         then
-            showVideo "$val"
+            playVideo "$val"
  
         # this prints any text that was not matched by previous patterns
         else
@@ -185,8 +276,28 @@ parseLine() {
     fi
 }
 
+
+# ==================== PROCEDURAL CODE =========================================
+
+# get start time
+start=`date +%s`
+startDate=`date -Is`
+
+# execute slideshow
 cat "$1" |
 while read -r line
 do
     parseLine "$line"
 done
+
+# get end time
+end=`date +%s`
+endDate=`date -Is`
+
+# get runtime
+runtime=$((end-start))
+
+# display runtime and end time
+echo "slideshow finished"
+echo "start: $startDate end: $endDate runtime: $runtime"
+
